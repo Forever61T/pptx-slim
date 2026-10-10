@@ -1,0 +1,21 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+
+# --- macOS ---
+.DS_Store
+._*
+
+# --- Office lock files ---
+~$*
+
+# --- Test decks: never commit a real presentation ---
+*.pptx
+*.ppt
+!assets/**
