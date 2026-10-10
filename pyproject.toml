@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pptx-slim"
-version = "1.0.0"
+version = "1.0.1"
 description = "Shrink a .pptx under a target size without touching layout, text or animation"
 readme = "README.md"
 requires-python = ">=3.7"

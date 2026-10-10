@@ -22,7 +22,7 @@ import sys
 import tempfile
 import zipfile
 
-__version__ = '1.0.0'
+__version__ = "1.0.1"
 
 try:
     from PIL import Image
@@ -78,6 +78,15 @@ M = {
     'not_found': ('File not found: {path}', '找不到文件：{path}'),
     'not_pptx': ('Not a .pptx file (the legacy .ppt format is not supported): {path}',
                  '这不是 .pptx 文件（旧版 .ppt 格式不支持）：{path}'),
+    'bad_target': ('Target must be greater than 0 MB (got {got}).',
+                   '目标必须大于 0 MB（你填的是 {got}）。'),
+    'bad_zip': ('Cannot read this as a .pptx — the file may be incomplete, '
+                'password-protected, or not a PowerPoint file at all:\n  {path}',
+                '读不出 pptx 结构 —— 文件可能没下载完整、被加密、'
+                '或者根本不是 PowerPoint 文件：\n  {path}'),
+    'no_write': ('No permission to write here:\n  {path}\n'
+                 'Choose another location with --out.',
+                 '没有写入权限：\n  {path}\n可以用 --out 换一个能写的位置。'),
     'hdr_original': ('Original          {size}', '原始文件          {size}'),
     'hdr_overhead': ('  non-image parts {size}', '  非图片部分      {size}'),
     'hdr_keep': ('  keep as-is      {size}', '  必须保留的图片  {size}'),
@@ -380,19 +389,28 @@ def slim(src, target_bytes, out_path=None, verbose=True, inplace=False):
         raise SystemExit(t('not_found', path=src))
     if not src.lower().endswith('.pptx'):
         raise SystemExit(t('not_pptx', path=src))
+    if target_bytes <= 0:
+        # 0 or a negative target used to run the whole pipeline and then
+        # announce "still above 0 B" — reject it instead of pretending.
+        raise SystemExit(t('bad_target', got=f'{target_bytes / (1024 * 1024):g}'))
 
     orig_size = os.path.getsize(src)
     if orig_size <= target_bytes:
         if verbose:
             print(t('already_small', size=hsize(orig_size)))
         # Nothing to do, but never hand back a path that does not exist.
-        return (src, orig_size, orig_size, []) if inplace else (src, orig_size, orig_size, [])
+        return src, orig_size, orig_size, []
 
     if out_path is None:
         base, ext = os.path.splitext(src)
         out_path = base + ' (compressed)' + ext
 
-    z = zipfile.ZipFile(src)
+    try:
+        z = zipfile.ZipFile(src)
+    except (zipfile.BadZipFile, OSError):
+        # A truncated download, a password-protected file and a renamed .docx
+        # all land here. Letting BadZipFile escape gives the user a traceback.
+        raise SystemExit(t('bad_zip', path=src))
     names = set(z.namelist())
     media = sorted(n for n in names if n.startswith('ppt/media/') and not n.endswith('/'))
     if not media:
@@ -499,9 +517,10 @@ def slim(src, target_bytes, out_path=None, verbose=True, inplace=False):
             for name, o, n, q, dim in results:
                 print(f'{name:<20}{hsize(o):>11}{hsize(n):>11}{n / o * 100:>6.0f}%'
                       f'{(str(q) if q else "-"):>4}  {dim:>12}')
-            print()
-            print(t('kept', items=', '.join(f'{k} ({hsize(v[0])}, {v[1]})'
-                                            for k, v in sorted(keep.items()))))
+            if keep:
+                print()
+                print(t('kept', items=', '.join(f'{k} ({hsize(v[0])}, {v[1]})'
+                                                for k, v in sorted(keep.items()))))
 
         problems = verify(cand)
         if problems:
@@ -512,7 +531,12 @@ def slim(src, target_bytes, out_path=None, verbose=True, inplace=False):
 
         final_out = src if inplace else out_path
         if os.path.abspath(final_out) != os.path.abspath(cand):
-            shutil.copyfile(cand, final_out)
+            try:
+                shutil.copyfile(cand, final_out)
+            except OSError:
+                # Read-only folder, a locked file, a full disk — anything the
+                # OS refuses. Say which path and stop, do not traceback.
+                raise SystemExit(t('no_write', path=final_out))
         if verbose:
             print()
             if size <= target_bytes:
