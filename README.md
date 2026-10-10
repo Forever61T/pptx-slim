@@ -89,6 +89,42 @@ This is the part that matters. Shrinking these would make the file smaller *and 
 
 If the target is unreachable once those are set aside, the tool says so and hands you the smallest version it produced, rather than silently degrading something it should not.
 
+## When it fails
+
+The table above is what it protects. This section is when it will refuse you. Every row below was **observed by running it**, not imagined.
+
+### It refuses, and changes nothing (exit code 1)
+
+| Situation | What it says |
+|---|---|
+| **No images at all** — the weight is embedded fonts or video | This pptx has no images, so there is nothing to shrink |
+| **Every image is an animated GIF** | No shrinkable images left — the rest are animations |
+| **Every image has real transparency** | Same as above |
+| Legacy **`.ppt`** format | Not a .pptx file (the legacy .ppt format is not supported) |
+| **Truncated download / password-protected / a .docx renamed to .pptx** | Cannot read this as a .pptx — the file may be incomplete, password-protected, or not a PowerPoint file at all |
+| Target given as **`0` or negative** | Target must be greater than 0 MB |
+| **No write permission** (read-only folder, `--out` into a missing directory) | No permission to write here — choose another location with `--out` |
+
+For a legacy `.ppt`, open it in PowerPoint and *Save As* `.pptx` first.
+
+### It does not refuse, but **cannot reach your target** (exit code 0)
+
+When the bulk of the file is not images, nothing can shrink it. The tool pushes what it can to the limit and then says so plainly:
+
+```
+Best effort: 31.01 MB → 15.02 MB, still above 1.00 MB.
+The remaining weight is mostly animations, transparent assets or embedded video.
+Shrinking those would drop frames or expose white backgrounds, so they were left alone.
+```
+
+To actually hit the target you have to go back and remove the video or the embedded fonts, or raise the target.
+
+### The cost of setting the target too small
+
+Asked to fit 45 MB into 1 MB, it will walk all the way down to 80 dpi at JPEG quality 58 — the file passes, and the projector shows you mush.
+
+**Use the limit your submission system actually gives you** (usually 5 MB or 10 MB). Do not undershoot on a hunch.
+
 ## The safety net
 
 Renaming `image4.png` to `image4.jpg` breaks every relationship file that pointed at it, and a part extension that `[Content_Types].xml` does not declare makes PowerPoint open with *"PowerPoint found a problem with content… repair?"* Most quick scripts get this wrong.
