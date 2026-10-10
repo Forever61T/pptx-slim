@@ -89,15 +89,50 @@ image8.png               857 KB    133 KB    16%  90     1041x693
 
 任何一项不过，程序**直接中止，而不是交给你一个坏文件**。
 
-## macOS：拖拽 App
+## 支持哪些系统
 
-不想开终端的人用这个：
+引擎是纯 Python —— 只用标准库加 Pillow，没有任何 macOS 专有调用。
+凡是装得上 Python 3.8+ 和 Pillow 的地方都能跑：macOS、Windows、Linux 都可以。
+
+「拖拽外壳」则是分平台的，因为「把文件拖到图标上」这件事本身就不可移植：
+
+| 系统 | 外壳 | 说明 |
+|---|---|---|
+| macOS | `macos/build.sh` | 生成内嵌引擎的 `.app` 拖拽程序 |
+| Windows | `windows/run.bat` | 把 `.pptx` 拖到 `.bat` 上，或双击后粘贴路径 |
+| Linux | — | 直接用命令行：`python3 pptx_slim.py 汇报.pptx 5` |
+
+### macOS
 
 ```bash
-macos/build.sh          # 在 ~/Applications 里生成「PPT Slimmer.app」
+macos/build.sh                    # 生成「PPT Slimmer.app」
+APP_NAME="PPT瘦身" macos/build.sh  # 或者换个中文名
 ```
 
 把 `.pptx` 拖到图标上，输入目标 MB，它会把结果报给你。引擎内嵌在 app 包里，独立可用。
+它只做了 ad-hoc 签名，所以**第一次打开**要先按住 Control 点图标 →「打开」
+（或者在终端里跑 `xattr -cr /Applications/PPT瘦身.app`）。
+
+### Windows
+
+把 `.pptx` 拖到 `windows\run.bat` 上即可。它会自动找你机器上的 Python
+（`python` 或 `py` 启动器），缺 Pillow 会帮你装上，然后问你要压到多少 MB。
+需要先从 [python.org](https://www.python.org/downloads/) 装 Python，
+安装时记得勾选 **Add python.exe to PATH**。
+
+### 打包发布
+
+`ditto -c -k` 会把中文文件名按 UTF-8 字节写进去，却**不设 UTF-8 标志位**，
+于是 `PPT瘦身.app` 到了 7-Zip、WinRAR 和 Windows 资源管理器里就变成
+`PPTτÿªΦ║½.app`。请改用仓库自带的打包器 —— 它会设好标志位，
+同时照样保住符号链接和权限位：
+
+```bash
+python3 tools/zip_app.py "PPT瘦身.app" 发布包.zip
+```
+
+（macOS 自带的 `/usr/bin/unzip` 是 Info-ZIP 6.00，两种情况下都显示乱码 ——
+那是这个上古工具的毛病，不是压缩包的问题。）
 
 ## 参数
 

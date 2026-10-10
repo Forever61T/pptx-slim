@@ -89,15 +89,52 @@ Every output is checked before it is handed to you:
 
 If any check fails, the run **aborts instead of writing a broken file**.
 
-## macOS: drag-and-drop app
+## Platforms
 
-For anyone who would rather not open a terminal:
+The engine is pure Python — standard library plus Pillow, with no macOS-specific
+calls in it. It runs anywhere Python 3.8+ and Pillow do: macOS, Windows, Linux.
+
+The drag-and-drop wrappers are per-platform, because dragging a file onto an icon
+is the one thing that is not portable:
+
+| Platform | Wrapper | Notes |
+|---|---|---|
+| macOS | `macos/build.sh` | Builds a `.app` droplet with the engine embedded |
+| Windows | `windows/run.bat` | Drag a `.pptx` onto the `.bat`, or double-click and paste a path |
+| Linux | — | Use the command line; `python3 pptx_slim.py deck.pptx 5` |
+
+### macOS
 
 ```bash
-macos/build.sh          # builds "PPT Slimmer.app" in ~/Applications
+macos/build.sh                    # builds "PPT Slimmer.app"
+APP_NAME="PPT瘦身" macos/build.sh  # ...or a localised name
 ```
 
-Then drag a `.pptx` onto the icon, type the target size in MB, and it reports the result. The engine is embedded in the app bundle, so the app works on its own.
+Drag a `.pptx` onto the icon, type the target size in MB, and it reports the
+result. The engine is embedded in the app bundle, so the app works on its own.
+It is signed ad-hoc, so the first launch needs Control-click → Open (or
+`xattr -cr /Applications/PPT瘦身.app`).
+
+### Windows
+
+Drag a `.pptx` onto `windows\run.bat`. It finds your Python (`python` or the
+`py` launcher), installs Pillow for you if it is missing, and asks for a target
+size. Requires Python from [python.org](https://www.python.org/downloads/) with
+**Add python.exe to PATH** ticked during install.
+
+### Packaging a release
+
+`ditto -c -k` writes UTF-8 filenames without setting the zip UTF-8 flag, so a
+bundle named `PPT瘦身.app` arrives as `PPTτÿªΦ║½.app` in 7-Zip, WinRAR and
+Windows Explorer. Use the bundled packer instead — it sets the flag and still
+preserves symlinks and permission bits:
+
+```bash
+python3 tools/zip_app.py "PPT瘦身.app" release.zip
+```
+
+(macOS's own `/usr/bin/unzip` is Info-ZIP 6.00 and shows mojibake either way —
+that is a limitation of that ancient tool, not of the archive.)
 
 ## Options
 

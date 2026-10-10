@@ -15,7 +15,8 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(dirname "$HERE")"
-APP_NAME="PPT Slimmer"
+# Override for a localised build:  APP_NAME="PPT瘦身" ./macos/build.sh
+APP_NAME="${APP_NAME:-PPT Slimmer}"
 DEST_DIR="${1:-$HOME/Applications}"
 DEST="$DEST_DIR/$APP_NAME.app"
 
