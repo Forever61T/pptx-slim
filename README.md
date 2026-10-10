@@ -12,7 +12,20 @@ Conference portals, grant systems and university submission forms all cap upload
 
 ---
 
-## Install
+## Download
+
+**macOS — no Python, no terminal.** Grab the drag-and-drop app from
+[**Releases**](https://github.com/Forever61T/pptx-slim/releases/latest):
+drop a `.pptx` on the icon, type the target size in MB, done.
+
+> **First launch only:** macOS blocks unsigned apps. Right-click the app → **Open** → **Open** again.
+> Or once from a terminal: `xattr -cr /Applications/PPT瘦身.app`.
+> Every free app without a paid Apple certificate hits this — it is not a fault in the app.
+
+**Windows.** Install [Python](https://www.python.org/downloads/) and tick *Add python.exe to PATH*,
+then drag your `.pptx` onto `windows\run.bat`. It installs Pillow for you if it is missing.
+
+**Any platform, command line:**
 
 ```bash
 pip install git+https://github.com/Forever61T/pptx-slim.git

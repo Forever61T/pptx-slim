@@ -12,7 +12,20 @@
 
 ---
 
-## 安装
+## 下载
+
+**macOS —— 不用装 Python，不用敲命令行。** 到
+[**Releases**](https://github.com/Forever61T/pptx-slim/releases/latest) 下载拖拽版 App：
+把 `.pptx` 拖到图标上，输入目标大小（MB），完事。
+
+> **只需首次放行一次：** macOS 会拦下未签名的 App。在 App 上**右键 → 打开 → 弹窗里再点一次「打开」**。
+> 或者在终端跑一次 `xattr -cr /Applications/PPT瘦身.app`。
+> 所有没买苹果开发者签名证书的免费 App 都会遇到这个 —— 不是软件本身有问题。
+
+**Windows。** 先装 [Python](https://www.python.org/downloads/)（安装时勾选 *Add python.exe to PATH*），
+然后把 `.pptx` **拖到 `windows\run.bat` 上**。缺 Pillow 它会自己装。
+
+**任意平台，命令行：**
 
 ```bash
 pip install git+https://github.com/Forever61T/pptx-slim.git
