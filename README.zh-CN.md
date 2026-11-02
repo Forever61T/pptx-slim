@@ -15,7 +15,8 @@
 ## 下载
 
 **macOS —— 不用装 Python，不用敲命令行。** 到
-[**Releases**](https://github.com/Forever61T/pptx-slim/releases/latest) 下载拖拽版 App：
+[**Releases**](https://github.com/Forever61T/pptx-slim/releases/latest) 下载
+`pptx-slim-macos-*.zip`，解压后把 `PPT瘦身.app` 拖进「应用程序」：
 把 `.pptx` 拖到图标上，输入目标大小（MB），完事。
 
 > **只需首次放行一次：** macOS 会拦下未签名的 App。在 App 上**右键 → 打开 → 弹窗里再点一次「打开」**。

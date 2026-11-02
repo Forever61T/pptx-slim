@@ -14,8 +14,9 @@ Conference portals, grant systems and university submission forms all cap upload
 
 ## Download
 
-**macOS — no Python, no terminal.** Grab the drag-and-drop app from
-[**Releases**](https://github.com/Forever61T/pptx-slim/releases/latest):
+**macOS — no Python, no terminal.** On
+[**Releases**](https://github.com/Forever61T/pptx-slim/releases/latest) download
+`pptx-slim-macos-*.zip`, unzip it, and drag `PPT瘦身.app` to Applications:
 drop a `.pptx` on the icon, type the target size in MB, done.
 
 > **First launch only:** macOS blocks unsigned apps. Right-click the app → **Open** → **Open** again.
