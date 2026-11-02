@@ -1,0 +1,91 @@
+name: windows-exe
+
+# Freezes windows/gui.py into a single PPT瘦身.exe on a real Windows machine,
+# smoke-tests it, and attaches the zip to the release when a v* tag is pushed.
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pillow pyinstaller python-pptx
+
+      - name: Freeze the GUI
+        run: |
+          pyinstaller --noconfirm --clean --onefile --windowed `
+            --name "PPT瘦身" `
+            --icon windows/app.ico `
+            --add-data "windows/app.ico;." `
+            --paths . `
+            windows/gui.py
+          Get-ChildItem dist
+
+      - name: Self-test the frozen exe
+        run: |
+          $p = Start-Process -FilePath "dist\PPT瘦身.exe" -ArgumentList '--self-test' -Wait -PassThru
+          $log = Join-Path $env:TEMP 'pptx-slim-selftest.log'
+          if (Test-Path $log) { Get-Content $log }
+          if ($p.ExitCode -ne 0) { throw "self-test failed with exit code $($p.ExitCode)" }
+
+      - name: End-to-end compress a real deck
+        run: |
+          python tools/make_test_deck.py "$env:RUNNER_TEMP\deck.pptx" 8
+          $args = '--cli "' + "$env:RUNNER_TEMP\deck.pptx" + '" 2'
+          $p = Start-Process -FilePath "dist\PPT瘦身.exe" -ArgumentList $args -Wait -PassThru
+          $log = Join-Path $env:TEMP 'pptx-slim-cli.log'
+          if (Test-Path $log) { Get-Content $log }
+          if ($p.ExitCode -ne 0) { throw "cli failed with exit code $($p.ExitCode)" }
+          $out = "$env:RUNNER_TEMP\deck (compressed).pptx"
+          if (-not (Test-Path $out)) { throw "no output file at $out" }
+          $size = (Get-Item $out).Length
+          Write-Host ("output {0:N2} MB from 8 MB target" -f ($size / 1MB))
+          if ($size -gt 3MB) { throw "still too big: $size bytes" }
+
+      - name: Pack the download
+        run: |
+          New-Item -ItemType Directory -Force out | Out-Null
+          Copy-Item "dist\PPT瘦身.exe" "out\PPT瘦身.exe"
+          Copy-Item "windows\使用说明-Windows.txt" "out\使用说明.txt"
+          $seven = 'C:\Program Files\7-Zip\7z.exe'
+          Push-Location out
+          & $seven a -tzip -mx=9 "..\pptx-slim-windows.zip" * | Out-Null
+          Pop-Location
+          Get-Item pptx-slim-windows.zip | Select-Object Name, Length
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pptx-slim-windows
+          path: pptx-slim-windows.zip
+          if-no-files-found: error
+
+      - name: Attach the zip to the release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          $null = gh release view $tag 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag --title "pptx-slim $tag" --notes "Windows 免安装版（PPT瘦身.exe）。"
+          }
+          gh release upload $tag pptx-slim-windows.zip --clobber

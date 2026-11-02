@@ -22,8 +22,15 @@
 > 或者在终端跑一次 `xattr -cr /Applications/PPT瘦身.app`。
 > 所有没买苹果开发者签名证书的免费 App 都会遇到这个 —— 不是软件本身有问题。
 
-**Windows。** 先装 [Python](https://www.python.org/downloads/)（安装时勾选 *Add python.exe to PATH*），
-然后把 `.pptx` **拖到 `windows\run.bat` 上**。缺 Pillow 它会自己装。
+**Windows —— 不用装 Python，不用敲命令行。** 到
+[**Releases**](https://github.com/Forever61T/pptx-slim/releases/latest) 下载
+`pptx-slim-windows.zip`，解压后双击 `PPT瘦身.exe`；也可以把 `.pptx` 直接拖到 exe 图标上。
+
+> **只需首次放行一次：** Windows 会弹 SmartScreen 蓝框。点「更多信息」→「仍要运行」。
+> 所有没买代码签名证书的免费 exe 都会遇到 —— 不是软件本身有问题。
+
+如果机器不让跑 exe，源码版照旧可用：装好 [Python](https://www.python.org/downloads/)
+（勾选 *Add python.exe to PATH*），把 `.pptx` 拖到 `windows\run.bat` 上，缺 Pillow 它会自己装。
 
 **任意平台，命令行：**
 
@@ -147,7 +154,7 @@ image8.png               857 KB    133 KB    16%  90     1041x693
 | 系统 | 外壳 | 说明 |
 |---|---|---|
 | macOS | `macos/build.sh` | 生成内嵌引擎的 `.app` 拖拽程序 |
-| Windows | `windows/run.bat` | 把 `.pptx` 拖到 `.bat` 上，或双击后粘贴路径 |
+| Windows | `PPT瘦身.exe`（`.github/workflows/windows.yml`） | 由 Windows CI 用 PyInstaller 冻结；`windows/gui.py` 是源码，`windows/run.bat` 是不打包的后备 |
 | Linux | — | 直接用命令行：`python3 pptx_slim.py 汇报.pptx 5` |
 
 ### macOS
@@ -163,10 +170,30 @@ APP_NAME="PPT瘦身" macos/build.sh  # 或者换个中文名
 
 ### Windows
 
-把 `.pptx` 拖到 `windows\run.bat` 上即可。它会自动找你机器上的 Python
-（`python` 或 `py` 启动器），缺 Pillow 会帮你装上，然后问你要压到多少 MB。
-需要先从 [python.org](https://www.python.org/downloads/) 装 Python，
-安装时记得勾选 **Add python.exe to PATH**。
+下载到的是 PyInstaller 打出的单个 `PPT瘦身.exe`：一个小窗口，列表选文件、填目标 MB、
+下方实时滚动日志，界面语言跟随 Windows 显示语言（中文 / English）。
+
+在 Windows 上自己构建：
+
+```bat
+python -m pip install pillow pyinstaller
+pyinstaller --onefile --windowed --name "PPT瘦身" --icon windows/app.ico ^
+  --add-data "windows/app.ico;." --paths . windows/gui.py
+```
+
+GitHub Actions（`.github/workflows/windows.yml`）就是在 `windows-latest` 上跑这套：
+先 `--self-test`，再现场生成一份 8 MB 的测试 PPT 压到 2 MB，确认冻结后的 exe 里引擎
+真的能用，最后打包成 `pptx-slim-windows.zip`。
+
+不打包的后备方案是 `windows\run.bat`：把 `.pptx` 拖上去，它会自动找你机器上的
+Python（`python` 或 `py` 启动器），缺 Pillow 会帮你装上，然后问你要压到多少 MB。
+
+窗口程序还带两个无界面模式（CI 用的）：
+
+```bat
+PPT瘦身.exe --self-test        :: 检查 Pillow、引擎、Tk、zip
+PPT瘦身.exe --cli 汇报.pptx 5  :: 直接压缩，退出码 0/1/2
+```
 
 ### 打包发布
 

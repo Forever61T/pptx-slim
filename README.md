@@ -22,8 +22,16 @@ drop a `.pptx` on the icon, type the target size in MB, done.
 > Or once from a terminal: `xattr -cr /Applications/PPT瘦身.app`.
 > Every free app without a paid Apple certificate hits this — it is not a fault in the app.
 
-**Windows.** Install [Python](https://www.python.org/downloads/) and tick *Add python.exe to PATH*,
-then drag your `.pptx` onto `windows\run.bat`. It installs Pillow for you if it is missing.
+**Windows — no Python, no terminal.** Download `pptx-slim-windows.zip` from
+[**Releases**](https://github.com/Forever61T/pptx-slim/releases/latest), unzip it and
+double-click `PPT瘦身.exe`. You can also drag a `.pptx` straight onto the exe.
+
+> **First launch only:** Windows SmartScreen holds the app back — click **More info** →
+> **Run anyway**. Every unsigned free exe hits this; it is not a fault in the app.
+
+If your machine does not allow exe files, the source version still works: install
+[Python](https://www.python.org/downloads/) and tick *Add python.exe to PATH*, then
+drag your `.pptx` onto `windows\run.bat` — it installs Pillow for you.
 
 **Any platform, command line:**
 
@@ -149,7 +157,7 @@ is the one thing that is not portable:
 | Platform | Wrapper | Notes |
 |---|---|---|
 | macOS | `macos/build.sh` | Builds a `.app` droplet with the engine embedded |
-| Windows | `windows/run.bat` | Drag a `.pptx` onto the `.bat`, or double-click and paste a path |
+| Windows | `.github/workflows/windows.yml` → `PPT瘦身.exe` | Frozen by PyInstaller on Windows CI; `windows/gui.py` is the source, `windows/run.bat` the no-freeze fallback |
 | Linux | — | Use the command line; `python3 pptx_slim.py deck.pptx 5` |
 
 ### macOS
@@ -166,10 +174,32 @@ It is signed ad-hoc, so the first launch needs Control-click → Open (or
 
 ### Windows
 
-Drag a `.pptx` onto `windows\run.bat`. It finds your Python (`python` or the
-`py` launcher), installs Pillow for you if it is missing, and asks for a target
-size. Requires Python from [python.org](https://www.python.org/downloads/) with
-**Add python.exe to PATH** ticked during install.
+The download is a single `PPT瘦身.exe` built by PyInstaller: a small Tk window
+with a file list, a target size in MB and a live log. It is bilingual and follows
+the Windows display language. Drag a `.pptx` onto the exe, or use **Select files…**.
+
+Building it yourself on Windows:
+
+```bat
+python -m pip install pillow pyinstaller
+pyinstaller --onefile --windowed --name "PPT瘦身" --icon windows/app.ico ^
+  --add-data "windows/app.ico;." --paths . windows/gui.py
+```
+
+The GitHub Actions workflow does exactly that on `windows-latest`, runs
+`--self-test`, compresses a generated 8 MB deck to prove the engine works inside
+the frozen exe, and packs `pptx-slim-windows.zip`.
+
+The no-freeze fallback is `windows\run.bat`: drag a `.pptx` onto the `.bat` and
+it finds your Python (`python` or the `py` launcher), installs Pillow if it is
+missing, and asks for a target size.
+
+The GUI has two headless modes, used by CI:
+
+```bat
+PPT瘦身.exe --self-test        :: checks Pillow, the engine, Tk and zip
+PPT瘦身.exe --cli deck.pptx 5  :: compresses, exit code 0/1/2
+```
 
 ### Packaging a release
 
