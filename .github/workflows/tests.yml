@@ -1,0 +1,30 @@
+name: tests
+
+# Regression suite: every push and pull request compresses a sample deck and
+# checks that the result still opens, stays under target, and carries no more
+# image pixels than its on-slide size needs.
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest pillow python-pptx
+
+      - name: Run regression tests
+        run: python -m pytest -v
