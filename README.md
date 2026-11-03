@@ -247,6 +247,8 @@ that is a limitation of that ancient tool, not of the archive.)
 
 Issues and pull requests welcome — especially real-world decks that come out wrong. If a file trips the structure check, that is a bug worth reporting, and the checker's message tells you exactly which part is at fault.
 
+Opening your first pull request? [Publishing to GitHub, step by step](docs/%E5%8F%91%E5%B8%83%E5%88%B0GitHub-%E6%89%8B%E6%8A%8A%E6%89%8B.md) (in Chinese) walks from installing `gh` to an open pull request.
+
 ## License
 
 [MIT](LICENSE)

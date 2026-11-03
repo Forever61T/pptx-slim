@@ -241,6 +241,8 @@ python3 tools/zip_app.py "PPT瘦身.app" 发布包.zip
 
 欢迎提 Issue 和 PR —— 尤其是那些压出来不对的真实文件。如果有文件触发了结构体检，那就是个值得报的 bug，体检信息会明确指出是哪个部件出了问题。
 
+第一次提 PR？[把它发布到 GitHub —— 手把手](docs/%E5%8F%91%E5%B8%83%E5%88%B0GitHub-%E6%89%8B%E6%8A%8A%E6%89%8B.md) 从装 `gh` 一直讲到发起 Pull Request。
+
 ## 许可
 
 [MIT](LICENSE)
